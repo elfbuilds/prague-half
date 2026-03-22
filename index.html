@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Prague Half Marathon â Pace Helper</title>
+<title>Prague Half Marathon – Pace Helper</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,12 +17,12 @@
     margin: 0 auto;
   }
 
-  /* ââ HEADER ââ */
+  /* ── HEADER ── */
   header { margin-bottom: 24px; }
   h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
   .subtitle { color: #555; font-size: 13px; margin-top: 4px; }
 
-  /* ââ CARDS ââ */
+  /* ── CARDS ── */
   .card {
     background: #1a1d27;
     border: 1px solid #22253a;
@@ -36,7 +36,7 @@
     margin-bottom: 12px;
   }
 
-  /* ââ RUNNER ROWS ââ */
+  /* ── RUNNER ROWS ── */
   .runner-row {
     background: #12141f;
     border-radius: 10px;
@@ -74,20 +74,29 @@
     padding-left: 18px; /* align under name, past the dot */
   }
   .pace-wrap {
-    display: flex; align-items: center; gap: 5px;
+    display: flex; align-items: center; gap: 3px;
     background: #0f1117; border-radius: 7px; padding: 5px 10px;
     flex-shrink: 0;
   }
-  .pace-in {
+  .pace-min, .pace-sec {
     background: transparent; border: none; color: #f0f0f0;
     font-size: 15px; font-weight: 600; outline: none;
-    width: 44px; text-align: center;
+    width: 26px; text-align: center;
+    -moz-appearance: textfield;
   }
-  .pace-in::placeholder { color: #3a3a4a; }
-  .pace-unit { color: #444; font-size: 11px; white-space: nowrap; }
+  .pace-min::-webkit-inner-spin-button,
+  .pace-min::-webkit-outer-spin-button,
+  .pace-sec::-webkit-inner-spin-button,
+  .pace-sec::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .pace-sep { color: #555; font-size: 15px; font-weight: 600; line-height: 1; }
+  .pace-unit { color: #444; font-size: 11px; white-space: nowrap; margin-left: 3px; }
   .finish-lbl {
     color: #555; font-size: 12px; flex: 1;
     text-align: right; white-space: nowrap;
+  }
+  .curr-km {
+    font-size: 11px; color: #444; white-space: nowrap; flex-shrink: 0;
+    margin-right: 2px;
   }
 
   #add-btn {
@@ -98,7 +107,7 @@
   }
   #add-btn:active { border-color: #3a3a52; color: #888; }
 
-  /* ââ CLOCK / SLIDER ââ */
+  /* ── CLOCK / SLIDER ── */
   #clock-lbl { font-size: 16px; font-weight: 700; color: #ddd; margin-bottom: 12px; }
   input[type=range] {
     width: 100%; accent-color: #e63946; cursor: pointer;
@@ -130,7 +139,7 @@
     font-size: 11px; color: #3a3a52; margin-top: 8px;
   }
 
-  /* ââ RESET BUTTON ââ */
+  /* ── RESET BUTTON ── */
   #play-btn {
     width: 100%; background: #252837; border: 1px solid #2e3148;
     border-radius: 12px; color: #aaa; font-size: 14px; font-weight: 600;
@@ -140,10 +149,10 @@
   }
   #play-btn:active { background: #1e2030; color: #ddd; }
 
-  /* ââ TRACK ââ */
+  /* ── TRACK ── */
   #track-wrap {
     position: relative;
-    height: 68px;
+    height: 76px;
   }
   .track-line {
     position: absolute;
@@ -170,6 +179,36 @@
     font-size: 9px; color: #505470; font-weight: 700;
     transform: translateX(-50%); white-space: nowrap;
   }
+  /* ── OVERLAP ZONES ── */
+  .overlap-zone {
+    position: absolute;
+    top: 10px; height: 36px;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.18;
+  }
+  .overlap-zone-border {
+    position: absolute;
+    top: 10px; height: 36px;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 1;
+    border: 1.5px solid;
+    opacity: 0.45;
+  }
+  .overlap-zone-lbl {
+    position: absolute;
+    top: 52px;
+    font-size: 8px; font-weight: 700;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.7;
+    letter-spacing: 0.04em;
+  }
+
   .rdot {
     position: absolute; top: 15px;
     width: 22px; height: 22px;
@@ -177,6 +216,7 @@
     border: 2.5px solid #0f1117;
     transform: translateX(-50%);
     transition: left 0.12s ease-out;
+    z-index: 2;
   }
   .rdot-lbl {
     position: absolute; top: -20px; left: 50%;
@@ -191,7 +231,7 @@
     font-size: 18px; line-height: 1;
   }
 
-  /* ââ CHECKPOINT TABLE ââ */
+  /* ── CHECKPOINT TABLE ── */
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 320px; }
   th {
@@ -206,7 +246,29 @@
   .ct { color: #e0e0e0; font-weight: 700; display: block; font-size: 13px; }
   .et { color: #444; font-size: 10px; }
 
-  /* ââ MOBILE TWEAKS ââ */
+  /* ── LOOK OUT CARD ── */
+  .lookout-block {
+    padding: 5px 0; border-bottom: 1px solid #161820;
+  }
+  .lookout-block:last-child { border-bottom: none; padding-bottom: 0; }
+  .lookout-name-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .lookout-name { font-size: 14px; font-weight: 700; }
+  .lookout-zone-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding-left: 18px; margin-bottom: 5px; flex-wrap: wrap;
+  }
+  .lookout-zone-row:last-child { margin-bottom: 0; }
+  .lookout-zone-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .lookout-targets { font-size: 13px; color: #ccc; line-height: 1.6; }
+  .lookout-none { font-size: 12px; color: #333; }
+
+  /* ── MOBILE TWEAKS ── */
   @media (max-width: 420px) {
     body { padding: 16px 12px env(safe-area-inset-bottom, 20px); }
     h1 { font-size: 20px; }
@@ -215,7 +277,7 @@
     .finish-lbl { display: none; }
   }
 
-  /* ââ DESKTOP REFINEMENTS ââ */
+  /* ── DESKTOP REFINEMENTS ── */
   @media (min-width: 600px) {
     body { padding: 28px 24px 48px; }
     h1 { font-size: 28px; }
@@ -234,7 +296,7 @@
 
 <header>
   <h1>Prague Half Marathon</h1>
-  <div class="subtitle">Pace Helper &nbsp;Â·&nbsp; 28 March 2026 &nbsp;Â·&nbsp; Start 10:00</div>
+  <div class="subtitle">Pace Helper &nbsp;·&nbsp; 28 March 2026 &nbsp;·&nbsp; Start 10:00</div>
 </header>
 
 <div class="card">
@@ -244,9 +306,9 @@
 </div>
 
 <div class="card">
-  <div id="clock-lbl">10:00 Â· start</div>
+  <div id="clock-lbl">10:00 · start</div>
   <input type="range" id="slider" min="0" max="180" step="0.25" value="0" />
-  <div class="slider-ends"><span>10:00 start</span><span>finish â</span></div>
+  <div class="slider-ends"><span>10:00 start</span><span>finish →</span></div>
 </div>
 
 <button id="play-btn">Reset to start</button>
@@ -264,21 +326,30 @@
   <div class="table-scroll"><table id="cp-table"></table></div>
 </div>
 
+<div class="card">
+  <div class="card-title">Who to Look Out For</div>
+  <div id="lookout-content"></div>
+</div>
+
 <script>
 const RACE_KM = 21.0975;
 const START_MIN = 600;
 const CPS = [5, 10, 15, RACE_KM];
 const CPL = ["5 km", "10 km", "15 km", "Finish"];
 const COLORS = ["#e63946","#2a9d8f","#e9c46a","#f4a261","#a8dadc","#6d6875","#b5838d","#48cae4","#52b788","#ff7b54"];
+const ZONES = [
+  { start: 5.8,  end: 8.9,  mid: 7.2,  color: "#ff9f43", label: "Zone A · km 5.8–8.9",   shortLabel: "Zone A" },
+  { start: 10.25, end: 12.2, mid: 11.25, color: "#48cae4", label: "Zone B · km 10.25–12.2", shortLabel: "Zone B" },
+];
 
 let runners = [
-  { id: 1, name: "Olivia",    pace: "5:30" },
-  { id: 2, name: "Alex G",    pace: "5:15" },
-  { id: 3, name: "Seb",       pace: "4:55" },
-  { id: 4, name: "Julia",     pace: "5:45" },
+  { id: 1, name: "Olivia",    pace: "4:15" },
+  { id: 2, name: "Alex G",    pace: "4:13" },
+  { id: 3, name: "Seb",       pace: "5:00" },
+  { id: 4, name: "Julia",     pace: "5:15" },
   { id: 5, name: "Corinne",   pace: "6:00" },
-  { id: 6, name: "Alexander", pace: "5:20" },
-  { id: 7, name: "Gaspard",   pace: "5:10" },
+  { id: 6, name: "Alexander", pace: "6:00" },
+  { id: 7, name: "Gaspard",   pace: "5:15" },
 ];
 let nextId = 8, elapsed = 0;
 const PAD_L = 20, PAD_R = 20;
@@ -288,6 +359,13 @@ function parsePace(s) {
   if (s.includes(":")) {
     const [m, sec] = s.split(":").map(Number);
     return (isNaN(m) || isNaN(sec)) ? null : m + sec / 60;
+  }
+  // Decimal input like "4.15" → treat as 4 min 15 sec (not 4.15 min)
+  if (s.includes(".")) {
+    const [m, secPart] = s.split(".");
+    const mins = parseInt(m, 10);
+    const secs = parseInt(secPart.padEnd(2, "0").slice(0, 2), 10);
+    return (isNaN(mins) || isNaN(secs) || secs >= 60) ? null : mins + secs / 60;
   }
   const v = parseFloat(s);
   return isNaN(v) ? null : v;
@@ -315,8 +393,26 @@ let dotEls = {};
 
 function buildTrack() {
   const wrap = document.getElementById("track-wrap");
-  wrap.querySelectorAll(".km-tick,.km-lbl,.km-cp,.km-cp-lbl").forEach(e => e.remove());
+  wrap.querySelectorAll(".km-tick,.km-lbl,.km-cp,.km-cp-lbl,.overlap-zone,.overlap-zone-border,.overlap-zone-lbl").forEach(e => e.remove());
   const tw = wrap.offsetWidth - PAD_L - PAD_R;
+  // Draw overlap zones (before km ticks so they're behind)
+  ZONES.forEach(z => {
+    const x1 = PAD_L + (z.start / RACE_KM) * tw;
+    const x2 = PAD_L + (z.end / RACE_KM) * tw;
+    const fill = document.createElement("div");
+    fill.className = "overlap-zone";
+    fill.style.cssText = `left:${x1}px;width:${x2-x1}px;background:${z.color}`;
+    wrap.appendChild(fill);
+    const border = document.createElement("div");
+    border.className = "overlap-zone-border";
+    border.style.cssText = `left:${x1}px;width:${x2-x1}px;border-color:${z.color}`;
+    wrap.appendChild(border);
+    const lbl = document.createElement("div");
+    lbl.className = "overlap-zone-lbl";
+    lbl.textContent = `${z.start}–${z.end}`;
+    lbl.style.cssText = `left:${(x1+x2)/2}px;color:${z.color}`;
+    wrap.appendChild(lbl);
+  });
   // Decide label density based on width
   const labelEvery = tw < 260 ? 10 : 5;
   for (let km = 1; km <= 20; km++) {
@@ -369,6 +465,13 @@ function moveDots() {
     el.style.boxShadow = `0 0 8px ${c}88`;
     el.querySelector(".rdot-lbl").textContent = r.name || "?";
     el.querySelector(".rdot-lbl").style.color = c;
+    // update live km badge in runner row
+    const badge = document.querySelector(`.curr-km[data-id="${r.id}"]`);
+    if (badge) {
+      if (elapsed <= 0) { badge.textContent = ""; }
+      else if (km >= RACE_KM) { badge.textContent = "done"; badge.style.color = c + "99"; }
+      else { badge.textContent = `km ${km.toFixed(1)}`; badge.style.color = "#555"; }
+    }
   });
 }
 
@@ -379,6 +482,9 @@ function renderList() {
     const c = COLORS[i % COLORS.length];
     const p = parsePace(r.pace);
     const f = p ? p * RACE_KM : null;
+    const parts = r.pace.includes(":") ? r.pace.split(":") : ["5","00"];
+    const pMin = parts[0] || "5";
+    const pSec = (parts[1] || "00").padStart(2,"0");
     const row = document.createElement("div");
     row.className = "runner-row";
     row.style.borderColor = c + "55";
@@ -386,24 +492,47 @@ function renderList() {
       <div class="runner-top">
         <div class="dot" style="background:${c}"></div>
         <input class="name-in" type="text" value="${esc(r.name)}" placeholder="Name"
-               data-id="${r.id}" data-f="name" autocomplete="off" />
-        <button class="rm-btn" data-id="${r.id}" aria-label="Remove">Ã</button>
+               data-id="${r.id}" autocomplete="off" />
+        <span class="curr-km" data-id="${r.id}"></span>
+        <button class="rm-btn" data-id="${r.id}" aria-label="Remove">×</button>
       </div>
       <div class="runner-bottom">
         <div class="pace-wrap">
-          <input class="pace-in" type="text" inputmode="decimal" value="${esc(r.pace)}"
-                 placeholder="5:30" data-id="${r.id}" data-f="pace" autocomplete="off" />
+          <input class="pace-min" type="number" inputmode="numeric" min="3" max="15"
+                 value="${pMin}" data-id="${r.id}" />
+          <span class="pace-sep">:</span>
+          <input class="pace-sec" type="number" inputmode="numeric" min="0" max="59"
+                 value="${pSec}" data-id="${r.id}" />
           <span class="pace-unit">min/km</span>
         </div>
         <div class="finish-lbl">${f ? "~" + fmtE(f) + " finish" : '<span style="color:#2a2a3a">invalid</span>'}</div>
       </div>`;
     list.appendChild(row);
   });
-  list.querySelectorAll("input").forEach(inp => {
+  // Name inputs — targeted update (no full re-render, preserves focus)
+  list.querySelectorAll(".name-in").forEach(inp => {
     inp.addEventListener("input", e => {
-      const id = +e.target.dataset.id, f = e.target.dataset.f;
-      runners = runners.map(r => r.id === id ? { ...r, [f]: e.target.value } : r);
-      renderAll();
+      const id = +e.target.dataset.id;
+      runners = runners.map(r => r.id === id ? { ...r, name: e.target.value } : r);
+      syncDots(); moveDots(); renderTable();
+    });
+  });
+  // Pace inputs — targeted update
+  list.querySelectorAll(".pace-min, .pace-sec").forEach(inp => {
+    inp.addEventListener("input", e => {
+      const id = +e.target.dataset.id;
+      const row = e.target.closest(".runner-row");
+      const mins = row.querySelector(".pace-min").value || "0";
+      const rawSec = row.querySelector(".pace-sec").value || "0";
+      const secs = String(Math.min(59, parseInt(rawSec) || 0)).padStart(2, "0");
+      const newPace = `${mins}:${secs}`;
+      runners = runners.map(r => r.id === id ? { ...r, pace: newPace } : r);
+      const p2 = parsePace(newPace);
+      const f2 = p2 ? p2 * RACE_KM : null;
+      row.querySelector(".finish-lbl").innerHTML = f2
+        ? "~" + fmtE(f2) + " finish"
+        : '<span style="color:#2a2a3a">invalid</span>';
+      renderSlider(); syncDots(); moveDots(); renderTable(); renderLookout();
     });
   });
   list.querySelectorAll(".rm-btn").forEach(b => {
@@ -412,6 +541,8 @@ function renderList() {
       renderAll();
     });
   });
+  // Restore curr-km badges after rebuild
+  moveDots();
 }
 
 function renderSlider() {
@@ -419,21 +550,73 @@ function renderSlider() {
   sl.max = maxT();
   sl.value = elapsed;
   document.getElementById("clock-lbl").textContent =
-    `${clk(elapsed)}  Â·  elapsed ${fmtE(elapsed)}`;
+    `${clk(elapsed)}  ·  elapsed ${fmtE(elapsed)}`;
 }
 
 function renderTable() {
-  let h = `<thead><tr><th>Runner</th>${CPL.map(l => `<th>${l}</th>`).join("")}</tr></thead><tbody>`;
+  const nowHdr = elapsed > 0 ? `<span class="ct" style="font-size:11px">${fmtE(elapsed)}</span><span class="et">now</span>` : '<span style="color:#333">Now</span>';
+  let h = `<thead><tr><th>Runner</th><th>${nowHdr}</th>${CPL.map(l => `<th>${l}</th>`).join("")}</tr></thead><tbody>`;
   runners.forEach((r, i) => {
     const p = parsePace(r.pace), c = COLORS[i % COLORS.length];
+    const nowKm = p ? Math.min(elapsed / p, RACE_KM) : null;
+    const nowCell = elapsed <= 0
+      ? '<span style="color:#2a2a3a">—</span>'
+      : (nowKm >= RACE_KM
+          ? `<span class="ct" style="font-size:11px">done</span>`
+          : `<span class="ct" style="font-size:12px">${nowKm.toFixed(1)} km</span>`);
     h += `<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c};margin-right:7px;vertical-align:middle"></span>${esc(r.name)}</td>
+      <td>${nowCell}</td>
       ${CPS.map(km => {
         const m = p ? p * km : null;
-        return `<td>${m ? `<span class="ct">${clk(m)}</span><span class="et">${fmtE(m)}</span>` : "â"}</td>`;
+        return `<td>${m ? `<span class="ct">${clk(m)}</span><span class="et">${fmtE(m)}</span>` : "—"}</td>`;
       }).join("")}</tr>`;
   });
   h += "</tbody>";
   document.getElementById("cp-table").innerHTML = h;
+}
+
+function renderLookout() {
+  const el = document.getElementById("lookout-content");
+  if (!el) return;
+  let html = "";
+  ZONES.forEach((z, zi) => {
+    if (zi > 0) html += `<div style="height:1px;background:#22253a;margin:12px 0"></div>`;
+    html += `<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${z.color};margin-bottom:10px">${z.label}</div>`;
+    const sum = 2 * z.mid;
+    runners.forEach((r, i) => {
+      const p_R = parsePace(r.pace);
+      const c = COLORS[i % COLORS.length];
+      const crossings = [];
+      if (p_R) {
+        runners.forEach((s, j) => {
+          if (s.id === r.id) return;
+          const p_S = parsePace(s.pace);
+          if (!p_S || p_S === p_R) return;
+          const km_R = sum * p_S / (p_R + p_S);
+          const margin = 0.1;
+          const valid = p_R < p_S
+            ? (km_R >= z.mid + margin && km_R <= z.end)
+            : (km_R >= z.start && km_R <= z.mid - margin);
+          if (valid) crossings.push({ name: s.name, km: km_R, color: COLORS[j % COLORS.length] });
+        });
+        crossings.sort((a, b) => a.km - b.km);
+      }
+      html += `<div class="lookout-block">
+        <div class="lookout-name-row">
+          <div class="dot" style="background:${c}"></div>
+          <span class="lookout-name" style="color:${c}">${esc(r.name)}</span>
+          <span class="lookout-targets" style="margin-left:4px">`;
+      if (!p_R || crossings.length === 0) {
+        html += `<span class="lookout-none">no crossing</span>`;
+      } else {
+        html += crossings.map(cr =>
+          `<span style="color:${cr.color};font-weight:700">${esc(cr.name)}</span> ~km ${cr.km.toFixed(1)}`
+        ).join('<span style="color:#333"> · </span>');
+      }
+      html += `</span></div></div>`;
+    });
+  });
+  el.innerHTML = html;
 }
 
 function renderAll() {
@@ -442,6 +625,7 @@ function renderAll() {
   syncDots();
   moveDots();
   renderTable();
+  renderLookout();
 }
 
 document.getElementById("add-btn").addEventListener("click", () => {
@@ -450,7 +634,8 @@ document.getElementById("add-btn").addEventListener("click", () => {
   renderAll();
 });
 document.getElementById("slider").addEventListener("input", e => {
-  elapsed = +e.target.value; renderAll();
+  elapsed = +e.target.value;
+  renderSlider(); moveDots(); renderTable();
 });
 document.getElementById("play-btn").addEventListener("click", () => {
   elapsed = 0;
