@@ -4,272 +4,119 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prague Half Marathon – Pace Helper</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0f1117; color: #f0f0f0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    input[type=range] { width: 100%; accent-color: #e63946; cursor: pointer; height: 6px; }
-    input[type=text] { background: #0f1117; border: 1px solid #2a2d3a; border-radius: 8px; padding: 6px 10px; color: #f0f0f0; font-size: 14px; outline: none; }
-    input[type=text]:focus { border-color: #e63946; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 8px 12px; }
-    th { color: #666; border-bottom: 1px solid #222; text-align: left; }
-    td { border-bottom: 1px solid #1a1d27; }
-    ::-webkit-scrollbar { height: 6px; } ::-webkit-scrollbar-track { background: #0f1117; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    html, body { height: 100%; overflow: hidden; }
+    body { background: #0f1117; color: #f0f0f0; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; }
+    #sidebar { width: 360px; min-width: 360px; height: 100vh; overflow-y: auto; padding: 20px 16px; background: #0f1117; border-right: 1px solid #1e2130; display: flex; flex-direction: column; gap: 14px; }
+    h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .subtitle { color: #666; font-size: 12px; margin-top: 2px; }
+    #map { flex: 1; height: 100vh; }
+    .card { background: #1a1d27; border-radius: 12px; padding: 14px 16px; border: 1px solid #22253a; }
+    .card-title { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+    .runner-row { display: flex; align-items: center; gap: 8px; background: #12141f; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; border: 1.5px solid transparent; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .runner-row input[type=text] { background: transparent; border: none; color: #f0f0f0; font-size: 13px; outline: none; min-width: 0; }
+    .runner-row input[type=text]::placeholder { color: #444; }
+    .name-input { flex: 2; font-weight: 600; }
+    .pace-wrap { display: flex; align-items: center; gap: 4px; flex: 1.5; }
+    .pace-input { flex: 1; }
+    .pace-unit { color: #555; font-size: 11px; white-space: nowrap; }
+    .finish-label { color: #888; font-size: 11px; text-align: right; flex: 1.4; white-space: nowrap; }
+    .remove-btn { background: none; border: none; color: #444; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px; }
+    .remove-btn:hover { color: #e63946; }
+    #add-btn { width: 100%; background: none; border: 1px dashed #2a2d3a; border-radius: 8px; color: #555; padding: 7px; cursor: pointer; font-size: 12px; margin-top: 2px; }
+    #add-btn:hover { border-color: #444; color: #888; }
+    #clock-label { font-size: 13px; font-weight: 700; color: #ccc; margin-bottom: 8px; }
+    input[type=range] { width: 100%; accent-color: #e63946; cursor: pointer; height: 4px; }
+    .slider-ends { display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-top: 4px; }
+    #play-btn { width: 100%; background: #e63946; border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; padding: 9px; cursor: pointer; letter-spacing: 0.04em; }
+    #play-btn:hover { background: #c1121f; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th { color: #555; padding: 4px 6px; text-align: center; border-bottom: 1px solid #22253a; font-weight: 600; }
+    th:first-child { text-align: left; }
+    td { padding: 5px 6px; border-bottom: 1px solid #1a1d27; text-align: center; color: #aaa; }
+    td:first-child { text-align: left; font-weight: 600; color: #d0d0d0; }
+    .clock-t { color: #e0e0e0; font-weight: 600; display: block; }
+    .elapsed-t { color: #555; font-size: 10px; }
+    .leaflet-container { background: #0f1117; }
+    .runner-label { background: transparent !important; border: none !important; box-shadow: none !important; font-size: 11px; font-weight: 700; text-shadow: 0 1px 3px #000, 0 0 6px #000; white-space: nowrap; }
+    .km-label { background: transparent !important; border: none !important; box-shadow: none !important; color: #777; font-size: 9px; font-weight: 600; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+    .leaflet-tooltip.cp-tip { background: transparent; border: none; box-shadow: none; color: #999; font-size: 10px; font-weight: 700; text-shadow: 0 1px 3px #000; }
+    .leaflet-tooltip-left.cp-tip::before, .leaflet-tooltip-right.cp-tip::before { border: none; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f1117; } ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 2px; }
   </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useCallback } = React;
-
+<div id="sidebar">
+  <div>
+    <h1>🏃 Prague Half Marathon</h1>
+    <div class="subtitle">Pace Helper &nbsp;·&nbsp; 28 March 2026 &nbsp;·&nbsp; Start 10:00</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Your Group</div>
+    <div id="runners-list"></div>
+    <button id="add-btn">+ Add runner</button>
+  </div>
+  <div class="card">
+    <div id="clock-label">10:00 · start</div>
+    <input type="range" id="slider" min="0" max="180" step="0.25" value="0" />
+    <div class="slider-ends"><span>10:00 start</span><span>finish →</span></div>
+  </div>
+  <button id="play-btn">▶ Play</button>
+  <div class="card">
+    <div class="card-title">Checkpoint Times</div>
+    <div id="cp-table-wrap" style="overflow-x:auto;"></div>
+  </div>
+</div>
+<div id="map"></div>
+<script>
 const RACE_KM = 21.0975;
 const COLORS = ["#e63946","#2a9d8f","#e9c46a","#f4a261","#a8dadc","#6d6875","#b5838d","#48cae4","#52b788","#ff6b6b"];
 const CHECKPOINTS = [5, 10, 15, RACE_KM];
-
-function parsePace(str) {
-  const clean = str.trim().replace(",", ".");
-  if (clean.includes(":")) {
-    const [m, s] = clean.split(":").map(Number);
-    if (isNaN(m) || isNaN(s)) return null;
-    return m + s / 60;
-  }
-  const val = parseFloat(clean);
-  return isNaN(val) ? null : val;
-}
-
-function fmtElapsed(mins) {
-  const h = Math.floor(mins / 60);
-  const m = Math.floor(mins % 60);
-  const s = Math.round((mins * 60) % 60);
-  if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-  return `${m}:${String(s).padStart(2,"0")}`;
-}
-
-function clockTime(mins) {
-  const abs = 10 * 60 + mins;
-  return `${String(Math.floor(abs/60)%24).padStart(2,"0")}:${String(Math.floor(abs%60)).padStart(2,"0")}`;
-}
-
-function distAt(pace, elapsed) {
-  if (!pace || pace <= 0) return 0;
-  return Math.min(elapsed / pace, RACE_KM);
-}
-
-const DEFAULT_RUNNERS = [
-  { id: 1, name: "Anna", pace: "5:00" },
-  { id: 2, name: "Ben", pace: "5:30" },
-  { id: 3, name: "Clara", pace: "6:15" },
+const ROUTE_GPS = [
+  [50.1072,14.4447],[50.1072,14.4510],[50.1090,14.4600],[50.1116,14.4670],
+  [50.1185,14.4850],[50.1225,14.5133],[50.1215,14.5150],[50.1138,14.4807],
+  [50.1060,14.4580],[50.0984,14.4292],[50.0884,14.4127],[50.0785,14.4103],
+  [50.0686,14.4086],[50.0576,14.4079],[50.0466,14.4079],[50.0367,14.4076],
+  [50.0267,14.4076],[50.0344,14.4103],[50.0444,14.4138],[50.0532,14.4189],
+  [50.0620,14.4258],[50.0697,14.4326],[50.0774,14.4395],[50.0851,14.4440],
+  [50.0940,14.4457],[50.1006,14.4447],[50.1072,14.4447]
 ];
-
-function App() {
-  const [runners, setRunners] = useState(DEFAULT_RUNNERS);
-  const [nextId, setNextId] = useState(4);
-  const [slider, setSlider] = useState(60);
-
-  const maxTime = Math.max(180, ...runners.map(r => {
-    const p = parsePace(r.pace);
-    return p ? Math.ceil(p * RACE_KM) + 5 : 180;
-  }));
-
-  const add = () => {
-    setRunners(prev => [...prev, { id: nextId, name: `Runner ${nextId}`, pace: "6:00" }]);
-    setNextId(n => n + 1);
-  };
-
-  const update = useCallback((id, field, val) => {
-    setRunners(prev => prev.map(r => r.id === id ? {...r, [field]: val} : r));
-  }, []);
-
-  const remove = id => setRunners(prev => prev.filter(r => r.id !== id));
-
-  return (
-    <div style={{minHeight:"100vh", padding:"24px"}}>
-      <div style={{textAlign:"center", marginBottom:32}}>
-        <div style={{fontSize:34, fontWeight:800, letterSpacing:"-1px"}}>🏃 Prague Half Marathon</div>
-        <div style={{color:"#888", fontSize:14, marginTop:6}}>Pace Helper &nbsp;·&nbsp; Start: 10:00 &nbsp;·&nbsp; 21.1 km</div>
-      </div>
-
-      <div style={{maxWidth:860, margin:"0 auto"}}>
-
-        {/* Runners */}
-        <Section title="Your Group">
-          <div style={{display:"grid", gap:10}}>
-            {runners.map((r, i) => (
-              <RunnerRow key={r.id} runner={r} color={COLORS[i%COLORS.length]} onUpdate={update} onRemove={() => remove(r.id)} />
-            ))}
-          </div>
-          <button onClick={add} style={{marginTop:12, background:"none", border:"1px dashed #333", borderRadius:8, color:"#666", padding:"8px 18px", cursor:"pointer", fontSize:13, width:"100%"}}>
-            + Add runner
-          </button>
-        </Section>
-
-        {/* Slider */}
-        <Section title={`⏱ Race Clock · ${clockTime(slider)}  (elapsed ${fmtElapsed(slider)})`}>
-          <input type="range" min={0} max={maxTime} step={0.5} value={slider} onChange={e => setSlider(Number(e.target.value))} />
-          <div style={{display:"flex", justifyContent:"space-between", fontSize:11, color:"#444", marginTop:6}}>
-            <span>10:00 · Start</span>
-            <span>← drag to scrub →</span>
-            <span>Finish line</span>
-          </div>
-        </Section>
-
-        {/* Map */}
-        <Section title="📍 Course Map">
-          <CourseMap runners={runners} slider={slider} />
-        </Section>
-
-        {/* Table */}
-        <Section title="🗂 Checkpoint Times">
-          <CheckpointTable runners={runners} />
-        </Section>
-
-      </div>
-    </div>
-  );
-}
-
-function RunnerRow({ runner, color, onUpdate, onRemove }) {
-  const pace = parsePace(runner.pace);
-  const finish = pace ? pace * RACE_KM : null;
-  return (
-    <div style={{display:"flex", alignItems:"center", gap:10, background:"#1a1d27", borderRadius:10, padding:"10px 14px", border:`1.5px solid ${color}44`}}>
-      <div style={{width:12, height:12, borderRadius:"50%", background:color, flexShrink:0}} />
-      <input type="text" value={runner.name} onChange={e => onUpdate(runner.id, "name", e.target.value)}
-        style={{flex:2, fontWeight:600}} placeholder="Name" />
-      <div style={{display:"flex", alignItems:"center", gap:6, flex:"1.5 1 0"}}>
-        <input type="text" value={runner.pace} onChange={e => onUpdate(runner.id, "pace", e.target.value)}
-          style={{flex:1}} placeholder="e.g. 5:30" />
-        <span style={{color:"#666", fontSize:12, whiteSpace:"nowrap"}}>min/km</span>
-      </div>
-      <div style={{color:"#aaa", fontSize:13, flex:"1 1 0", textAlign:"right", minWidth:110}}>
-        {finish ? `Finish ~${fmtElapsed(finish)}` : <span style={{color:"#555"}}>invalid pace</span>}
-      </div>
-      <button onClick={onRemove} style={{background:"none", border:"none", color:"#555", cursor:"pointer", fontSize:20, lineHeight:1, padding:"0 4px"}}>×</button>
-    </div>
-  );
-}
-
-function CourseMap({ runners, slider }) {
-  const W = 700, leftPad = 110, rightPad = 48;
-  const usable = W - leftPad - rightPad;
-  const rowH = 50, topPad = 16, botPad = 36;
-  const H = runners.length * rowH + topPad + botPad;
-
-  const cpX = km => leftPad + (km / RACE_KM) * usable;
-
-  return (
-    <div style={{overflowX:"auto"}}>
-      <svg width={W} height={H} style={{display:"block", margin:"0 auto"}}>
-        {/* Checkpoint grid lines */}
-        {CHECKPOINTS.map(km => (
-          <g key={km}>
-            <line x1={cpX(km)} y1={topPad} x2={cpX(km)} y2={H-botPad} stroke="#222" strokeWidth={1} strokeDasharray="3,4"/>
-            <text x={cpX(km)} y={H-8} textAnchor="middle" fill="#444" fontSize={11}>
-              {km === RACE_KM ? "Finish" : `${km}km`}
-            </text>
-          </g>
-        ))}
-        <text x={leftPad} y={H-8} textAnchor="middle" fill="#444" fontSize={11}>Start</text>
-
-        {/* Runners */}
-        {runners.map((r, i) => {
-          const pace = parsePace(r.pace);
-          const color = COLORS[i % COLORS.length];
-          const dist = distAt(pace, slider);
-          const cx = leftPad + (dist / RACE_KM) * usable;
-          const cy = topPad + i * rowH + rowH / 2;
-          const done = pace && slider >= pace * RACE_KM;
-
-          return (
-            <g key={r.id}>
-              {/* Track BG */}
-              <rect x={leftPad} y={cy-8} width={usable} height={16} rx={8} fill="#1e2130"/>
-              {/* Progress */}
-              {pace && (
-                <rect x={leftPad} y={cy-8} width={(dist/RACE_KM)*usable} height={16} rx={8} fill={color} opacity={0.5}/>
-              )}
-              {/* Name */}
-              <text x={leftPad-8} y={cy+5} textAnchor="end" fill={color} fontSize={13} fontWeight={700}>{r.name}</text>
-              {/* Runner dot */}
-              {pace && (
-                <g>
-                  <circle cx={cx} cy={cy} r={11} fill={color} stroke="#0f1117" strokeWidth={2.5}/>
-                  <text x={cx} y={cy+4} textAnchor="middle" fill="#fff" fontSize={9} fontWeight={800}>
-                    {dist.toFixed(1)}
-                  </text>
-                </g>
-              )}
-              {/* Finish flag */}
-              {done && (
-                <text x={leftPad+usable+10} y={cy+5} fontSize={18}>🏁</text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-function CheckpointTable({ runners }) {
-  return (
-    <div style={{overflowX:"auto"}}>
-      <table>
-        <thead>
-          <tr>
-            <th>Runner</th>
-            <th>Pace</th>
-            {CHECKPOINTS.map(km => (
-              <th key={km} style={{textAlign:"center"}}>{km === RACE_KM ? "Finish 🏁" : `${km} km`}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {runners.map((r, i) => {
-            const pace = parsePace(r.pace);
-            const color = COLORS[i % COLORS.length];
-            return (
-              <tr key={r.id}>
-                <td style={{fontWeight:600}}>
-                  <span style={{display:"inline-block", width:10, height:10, borderRadius:"50%", background:color, marginRight:8}}/>
-                  {r.name}
-                </td>
-                <td style={{color:"#888"}}>{r.pace} /km</td>
-                {CHECKPOINTS.map(km => {
-                  const mins = pace ? pace * km : null;
-                  return (
-                    <td key={km} style={{textAlign:"center", lineHeight:1.6}}>
-                      {mins ? (
-                        <>
-                          <span style={{color:"#e0e0e0", fontWeight:600}}>{clockTime(mins)}</span><br/>
-                          <span style={{color:"#555", fontSize:11}}>{fmtElapsed(mins)}</span>
-                        </>
-                      ) : "—"}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div style={{background:"#1a1d27", borderRadius:14, padding:"20px 24px", marginBottom:20, border:"1px solid #22253a"}}>
-      <div style={{fontSize:12, fontWeight:700, color:"#666", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:16}}>{title}</div>
-      {children}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+function hav(a,b){const R=6371,dL=(b[0]-a[0])*Math.PI/180,dN=(b[1]-a[1])*Math.PI/180,s=Math.sin(dL/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dN/2)**2;return R*2*Math.asin(Math.sqrt(s));}
+const cum=[0];for(let i=1;i<ROUTE_GPS.length;i++)cum.push(cum[i-1]+hav(ROUTE_GPS[i-1],ROUTE_GPS[i]));
+const totalD=cum[cum.length-1],sf=RACE_KM/totalD;
+function posAtKm(km){const d=km/sf;if(d<=0)return ROUTE_GPS[0];if(d>=totalD)return ROUTE_GPS[ROUTE_GPS.length-1];for(let i=1;i<ROUTE_GPS.length;i++){if(cum[i]>=d){const t=(d-cum[i-1])/(cum[i]-cum[i-1]);return[ROUTE_GPS[i-1][0]+t*(ROUTE_GPS[i][0]-ROUTE_GPS[i-1][0]),ROUTE_GPS[i-1][1]+t*(ROUTE_GPS[i][1]-ROUTE_GPS[i-1][1])];}}return ROUTE_GPS[ROUTE_GPS.length-1];}
+function parsePace(s){const c=s.trim().replace(",",".");if(c.includes(":")){const[m,sec]=c.split(":").map(Number);if(isNaN(m)||isNaN(sec))return null;return m+sec/60;}const v=parseFloat(c);return isNaN(v)?null:v;}
+function pad(n){return String(n).padStart(2,"0");}
+function fmtE(m){const h=Math.floor(m/60),mm=Math.floor(m%60),s=Math.round((m*60)%60);return h>0?h+":"+pad(mm)+":"+pad(s):mm+":"+pad(s);}
+function clk(m){const a=600+m;return pad(Math.floor(a/60)%24)+":"+pad(Math.floor(a%60));}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+let runners=[{id:1,name:"Anna",pace:"5:00"},{id:2,name:"Ben",pace:"5:30"},{id:3,name:"Clara",pace:"6:15"}];
+let nextId=4,elapsed=0,playing=false,rafId=null,lastTs=null;
+const SPEED=25;
+const map=L.map("map",{center:[50.075,14.440],zoom:13});
+L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:'© OSM © CARTO',subdomains:"abcd",maxZoom:19}).addTo(map);
+const line=L.polyline(ROUTE_GPS,{color:"#e63946",weight:4,opacity:0.65}).addTo(map);
+L.circleMarker(ROUTE_GPS[0],{radius:9,color:"#fff",fillColor:"#e63946",fillOpacity:1,weight:2.5}).addTo(map).bindTooltip("Start / Finish",{permanent:true,direction:"right",className:"cp-tip",offset:[10,0]});
+for(let km=1;km<=20;km++){const p=posAtKm(km);L.circleMarker(p,{radius:3,color:"#555",fillColor:"#333",fillOpacity:1,weight:1}).addTo(map);L.marker(p,{icon:L.divIcon({className:"km-label",html:String(km),iconAnchor:[-7,6]}),interactive:false}).addTo(map);}
+[[5,"#2a9d8f"],[10,"#e9c46a"],[15,"#f4a261"]].forEach(([km,c])=>{L.circleMarker(posAtKm(km),{radius:7,color:c,fillColor:"#0f1117",fillOpacity:0.95,weight:2.5}).addTo(map).bindTooltip(km+" km",{permanent:true,direction:"right",className:"cp-tip",offset:[10,0]});});
+let rm={};
+function syncMarkers(){Object.keys(rm).forEach(id=>{if(!runners.find(r=>r.id==id)){rm[id].c.remove();rm[id].l.remove();delete rm[id];}});runners.forEach((r,i)=>{if(!rm[r.id]){const col=COLORS[i%10];rm[r.id]={c:L.circleMarker(ROUTE_GPS[0],{radius:11,color:"#0f1117",fillColor:col,fillOpacity:1,weight:2.5}).addTo(map),l:L.marker(ROUTE_GPS[0],{icon:L.divIcon({className:"runner-label",html:'<span style="color:'+col+'">'+esc(r.name)+'</span>',iconAnchor:[-14,8]}),interactive:false}).addTo(map)};});}
+function moveRunners(){runners.forEach((r,i)=>{const m=rm[r.id];if(!m)return;const col=COLORS[i%10],p=parsePace(r.pace),km=p?Math.min(elapsed/p,RACE_KM):0,pos=posAtKm(km);m.c.setStyle({fillColor:col});m.c.setLatLng(pos);m.l.setLatLng(pos);m.l.setIcon(L.divIcon({className:"runner-label",html:'<span style="color:'+col+'">'+esc(r.name)+'</span>',iconAnchor:[-14,8]}));});}
+function maxT(){return Math.max(180,...runners.map(r=>{const p=parsePace(r.pace);return p?Math.ceil(p*RACE_KM)+5:180;}));}
+function renderList(){const el=document.getElementById("runners-list");el.innerHTML="";runners.forEach((r,i)=>{const col=COLORS[i%10],p=parsePace(r.pace),f=p?p*RACE_KM:null,d=document.createElement("div");d.className="runner-row";d.style.borderColor=col+"44";d.innerHTML='<div class="dot" style="background:'+col+'"></div><input class="name-input" type="text" value="'+esc(r.name)+'" placeholder="Name" data-id="'+r.id+'" data-field="name"><div class="pace-wrap"><input class="pace-input" type="text" value="'+esc(r.pace)+'" placeholder="5:30" data-id="'+r.id+'" data-field="pace"><span class="pace-unit">min/km</span></div><div class="finish-label">'+(f?'~'+fmtE(f):'<span style="color:#444">—</span>')+'</div><button class="remove-btn" data-id="'+r.id+'">×</button>';el.appendChild(d);});el.querySelectorAll("input[type=text]").forEach(inp=>inp.addEventListener("input",e=>{const id=+e.target.dataset.id,field=e.target.dataset.field;runners=runners.map(r=>r.id===id?{...r,[field]:e.target.value}:r);render();}));el.querySelectorAll(".remove-btn").forEach(b=>b.addEventListener("click",e=>{runners=runners.filter(r=>r.id!=+e.target.dataset.id);render();}));}
+function renderSlider(){const sl=document.getElementById("slider");sl.max=maxT();sl.value=elapsed;document.getElementById("clock-label").textContent=clk(elapsed)+"  ·  elapsed "+fmtE(elapsed);}
+function renderTable(){const w=document.getElementById("cp-table-wrap");let h='<table><thead><tr><th>Runner</th><th>5 km</th><th>10 km</th><th>15 km</th><th>Finish 🏁</th></tr></thead><tbody>';runners.forEach((r,i)=>{const p=parsePace(r.pace),col=COLORS[i%10];h+='<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+col+';margin-right:6px;vertical-align:middle;"></span>'+esc(r.name)+'</td>'+CHECKPOINTS.map(km=>{const m=p?p*km:null;return'<td>'+(m?'<span class="clock-t">'+clk(m)+'</span><span class="elapsed-t">'+fmtE(m)+'</span>':'—')+'</td>';}).join("")+'</tr>';});h+='</tbody></table>';w.innerHTML=h;}
+function render(){renderList();renderSlider();renderTable();syncMarkers();moveRunners();}
+document.getElementById("add-btn").addEventListener("click",()=>{runners.push({id:nextId,name:"Runner "+nextId,pace:"6:00"});nextId++;render();});
+document.getElementById("slider").addEventListener("input",e=>{elapsed=+e.target.value;render();});
+document.getElementById("play-btn").addEventListener("click",()=>{playing=!playing;document.getElementById("play-btn").textContent=playing?"⏸ Pause":"▶ Play";if(playing){lastTs=null;rafId=requestAnimationFrame(anim);}else if(rafId)cancelAnimationFrame(rafId);});
+function anim(ts){if(!playing)return;if(lastTs!==null){elapsed+=((ts-lastTs)/1000)*SPEED;if(elapsed>=maxT()){elapsed=maxT();playing=false;document.getElementById("play-btn").textContent="▶ Play";render();return;}render();}lastTs=ts;rafId=requestAnimationFrame(anim);}
+render();
+map.fitBounds(line.getBounds(),{padding:[40,40]});
 </script>
 </body>
 </html>
