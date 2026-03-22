@@ -130,15 +130,15 @@
     font-size: 11px; color: #3a3a52; margin-top: 8px;
   }
 
-  /* ââ PLAY BUTTON ââ */
+  /* ââ RESET BUTTON ââ */
   #play-btn {
-    width: 100%; background: #e63946; border: none;
-    border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700;
-    padding: 14px; cursor: pointer; letter-spacing: 0.05em;
+    width: 100%; background: #252837; border: 1px solid #2e3148;
+    border-radius: 12px; color: #aaa; font-size: 14px; font-weight: 600;
+    padding: 12px; cursor: pointer; letter-spacing: 0.03em;
     margin-bottom: 12px;
     -webkit-tap-highlight-color: transparent;
   }
-  #play-btn:active { background: #c1121f; }
+  #play-btn:active { background: #1e2030; color: #ddd; }
 
   /* ââ TRACK ââ */
   #track-wrap {
@@ -233,7 +233,7 @@
 <body>
 
 <header>
-  <h1>ð Prague Half Marathon</h1>
+  <h1>Prague Half Marathon</h1>
   <div class="subtitle">Pace Helper &nbsp;Â·&nbsp; 28 March 2026 &nbsp;Â·&nbsp; Start 10:00</div>
 </header>
 
@@ -249,13 +249,13 @@
   <div class="slider-ends"><span>10:00 start</span><span>finish â</span></div>
 </div>
 
-<button id="play-btn">â¶ Play</button>
+<button id="play-btn">Reset to start</button>
 
 <div class="card" style="padding-bottom:20px">
   <div class="card-title">Race Track</div>
   <div id="track-wrap">
     <div class="track-line"></div>
-    <span class="finish-flag">ð</span>
+    <span class="finish-flag" style="font-size:13px;color:#383a55;font-weight:700;top:14px">END</span>
   </div>
 </div>
 
@@ -268,16 +268,19 @@
 const RACE_KM = 21.0975;
 const START_MIN = 600;
 const CPS = [5, 10, 15, RACE_KM];
-const CPL = ["5 km", "10 km", "15 km", "Finish ð"];
+const CPL = ["5 km", "10 km", "15 km", "Finish"];
 const COLORS = ["#e63946","#2a9d8f","#e9c46a","#f4a261","#a8dadc","#6d6875","#b5838d","#48cae4","#52b788","#ff7b54"];
 
 let runners = [
-  { id: 1, name: "Anna",  pace: "5:00" },
-  { id: 2, name: "Ben",   pace: "5:30" },
-  { id: 3, name: "Clara", pace: "6:15" },
+  { id: 1, name: "Olivia",    pace: "5:30" },
+  { id: 2, name: "Alex G",    pace: "5:15" },
+  { id: 3, name: "Seb",       pace: "4:55" },
+  { id: 4, name: "Julia",     pace: "5:45" },
+  { id: 5, name: "Corinne",   pace: "6:00" },
+  { id: 6, name: "Alexander", pace: "5:20" },
+  { id: 7, name: "Gaspard",   pace: "5:10" },
 ];
-let nextId = 4, elapsed = 0, playing = false, rafId = null, lastTs = null;
-const SPEED = 25;
+let nextId = 8, elapsed = 0;
 const PAD_L = 20, PAD_R = 20;
 
 function parsePace(s) {
@@ -450,26 +453,10 @@ document.getElementById("slider").addEventListener("input", e => {
   elapsed = +e.target.value; renderAll();
 });
 document.getElementById("play-btn").addEventListener("click", () => {
-  playing = !playing;
-  document.getElementById("play-btn").textContent = playing ? "â¸ Pause" : "â¶ Play";
-  if (playing) { lastTs = null; rafId = requestAnimationFrame(anim); }
-  else if (rafId) cancelAnimationFrame(rafId);
+  elapsed = 0;
+  document.getElementById("slider").value = 0;
+  renderAll();
 });
-function anim(ts) {
-  if (!playing) return;
-  if (lastTs !== null) {
-    elapsed += ((ts - lastTs) / 1000) * SPEED;
-    const mx = maxT();
-    if (elapsed >= mx) {
-      elapsed = mx; playing = false;
-      document.getElementById("play-btn").textContent = "â¶ Play";
-      renderAll(); return;
-    }
-    renderAll();
-  }
-  lastTs = ts;
-  rafId = requestAnimationFrame(anim);
-}
 
 let resizeTimer;
 window.addEventListener("resize", () => {
