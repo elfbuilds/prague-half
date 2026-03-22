@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prague Half Marathon – Pace Helper</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f1117; color: #f0f0f0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    input[type=range] { width: 100%; accent-color: #e63946; cursor: pointer; height: 6px; }
+    input[type=text] { background: #0f1117; border: 1px solid #2a2d3a; border-radius: 8px; padding: 6px 10px; color: #f0f0f0; font-size: 14px; outline: none; }
+    input[type=text]:focus { border-color: #e63946; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 8px 12px; }
+    th { color: #666; border-bottom: 1px solid #222; text-align: left; }
+    td { border-bottom: 1px solid #1a1d27; }
+    ::-webkit-scrollbar { height: 6px; } ::-webkit-scrollbar-track { background: #0f1117; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const RACE_KM = 21.0975;
+const COLORS = ["#e63946","#2a9d8f","#e9c46a","#f4a261","#a8dadc","#6d6875","#b5838d","#48cae4","#52b788","#ff6b6b"];
+const CHECKPOINTS = [5, 10, 15, RACE_KM];
+
+function parsePace(str) {
+  const clean = str.trim().replace(",", ".");
+  if (clean.includes(":")) {
+    const [m, s] = clean.split(":").map(Number);
+    if (isNaN(m) || isNaN(s)) return null;
+    return m + s / 60;
+  }
+  const val = parseFloat(clean);
+  return isNaN(val) ? null : val;
+}
+
+function fmtElapsed(mins) {
+  const h = Math.floor(mins / 60);
+  const m = Math.floor(mins % 60);
+  const s = Math.round((mins * 60) % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+
+function clockTime(mins) {
+  const abs = 10 * 60 + mins;
+  return `${String(Math.floor(abs/60)%24).padStart(2,"0")}:${String(Math.floor(abs%60)).padStart(2,"0")}`;
+}
+
+function distAt(pace, elapsed) {
+  if (!pace || pace <= 0) return 0;
+  return Math.min(elapsed / pace, RACE_KM);
+}
+
+const DEFAULT_RUNNERS = [
+  { id: 1, name: "Anna", pace: "5:00" },
+  { id: 2, name: "Ben", pace: "5:30" },
+  { id: 3, name: "Clara", pace: "6:15" },
+];
+
+function App() {
+  const [runners, setRunners] = useState(DEFAULT_RUNNERS);
+  const [nextId, setNextId] = useState(4);
+  const [slider, setSlider] = useState(60);
+
+  const maxTime = Math.max(180, ...runners.map(r => {
+    const p = parsePace(r.pace);
+    return p ? Math.ceil(p * RACE_KM) + 5 : 180;
+  }));
+
+  const add = () => {
+    setRunners(prev => [...prev, { id: nextId, name: `Runner ${nextId}`, pace: "6:00" }]);
+    setNextId(n => n + 1);
+  };
+
+  const update = useCallback((id, field, val) => {
+    setRunners(prev => prev.map(r => r.id === id ? {...r, [field]: val} : r));
+  }, []);
+
+  const remove = id => setRunners(prev => prev.filter(r => r.id !== id));
+
+  return (
+    <div style={{minHeight:"100vh", padding:"24px"}}>
+      <div style={{textAlign:"center", marginBottom:32}}>
+        <div style={{fontSize:34, fontWeight:800, letterSpacing:"-1px"}}>🏃 Prague Half Marathon</div>
+        <div style={{color:"#888", fontSize:14, marginTop:6}}>Pace Helper &nbsp;·&nbsp; Start: 10:00 &nbsp;·&nbsp; 21.1 km</div>
+      </div>
+
+      <div style={{maxWidth:860, margin:"0 auto"}}>
+
+        {/* Runners */}
+        <Section title="Your Group">
+          <div style={{display:"grid", gap:10}}>
+            {runners.map((r, i) => (
+              <RunnerRow key={r.id} runner={r} color={COLORS[i%COLORS.length]} onUpdate={update} onRemove={() => remove(r.id)} />
+            ))}
+          </div>
+          <button onClick={add} style={{marginTop:12, background:"none", border:"1px dashed #333", borderRadius:8, color:"#666", padding:"8px 18px", cursor:"pointer", fontSize:13, width:"100%"}}>
+            + Add runner
+          </button>
+        </Section>
+
+        {/* Slider */}
+        <Section title={`⏱ Race Clock · ${clockTime(slider)}  (elapsed ${fmtElapsed(slider)})`}>
+          <input type="range" min={0} max={maxTime} step={0.5} value={slider} onChange={e => setSlider(Number(e.target.value))} />
+          <div style={{display:"flex", justifyContent:"space-between", fontSize:11, color:"#444", marginTop:6}}>
+            <span>10:00 · Start</span>
+            <span>← drag to scrub →</span>
+            <span>Finish line</span>
+          </div>
+        </Section>
+
+        {/* Map */}
+        <Section title="📍 Course Map">
+          <CourseMap runners={runners} slider={slider} />
+        </Section>
+
+        {/* Table */}
+        <Section title="🗂 Checkpoint Times">
+          <CheckpointTable runners={runners} />
+        </Section>
+
+      </div>
+    </div>
+  );
+}
+
+function RunnerRow({ runner, color, onUpdate, onRemove }) {
+  const pace = parsePace(runner.pace);
+  const finish = pace ? pace * RACE_KM : null;
+  return (
+    <div style={{display:"flex", alignItems:"center", gap:10, background:"#1a1d27", borderRadius:10, padding:"10px 14px", border:`1.5px solid ${color}44`}}>
+      <div style={{width:12, height:12, borderRadius:"50%", background:color, flexShrink:0}} />
+      <input type="text" value={runner.name} onChange={e => onUpdate(runner.id, "name", e.target.value)}
+        style={{flex:2, fontWeight:600}} placeholder="Name" />
+      <div style={{display:"flex", alignItems:"center", gap:6, flex:"1.5 1 0"}}>
+        <input type="text" value={runner.pace} onChange={e => onUpdate(runner.id, "pace", e.target.value)}
+          style={{flex:1}} placeholder="e.g. 5:30" />
+        <span style={{color:"#666", fontSize:12, whiteSpace:"nowrap"}}>min/km</span>
+      </div>
+      <div style={{color:"#aaa", fontSize:13, flex:"1 1 0", textAlign:"right", minWidth:110}}>
+        {finish ? `Finish ~${fmtElapsed(finish)}` : <span style={{color:"#555"}}>invalid pace</span>}
+      </div>
+      <button onClick={onRemove} style={{background:"none", border:"none", color:"#555", cursor:"pointer", fontSize:20, lineHeight:1, padding:"0 4px"}}>×</button>
+    </div>
+  );
+}
+
+function CourseMap({ runners, slider }) {
+  const W = 700, leftPad = 110, rightPad = 48;
+  const usable = W - leftPad - rightPad;
+  const rowH = 50, topPad = 16, botPad = 36;
+  const H = runners.length * rowH + topPad + botPad;
+
+  const cpX = km => leftPad + (km / RACE_KM) * usable;
+
+  return (
+    <div style={{overflowX:"auto"}}>
+      <svg width={W} height={H} style={{display:"block", margin:"0 auto"}}>
+        {/* Checkpoint grid lines */}
+        {CHECKPOINTS.map(km => (
+          <g key={km}>
+            <line x1={cpX(km)} y1={topPad} x2={cpX(km)} y2={H-botPad} stroke="#222" strokeWidth={1} strokeDasharray="3,4"/>
+            <text x={cpX(km)} y={H-8} textAnchor="middle" fill="#444" fontSize={11}>
+              {km === RACE_KM ? "Finish" : `${km}km`}
+            </text>
+          </g>
+        ))}
+        <text x={leftPad} y={H-8} textAnchor="middle" fill="#444" fontSize={11}>Start</text>
+
+        {/* Runners */}
+        {runners.map((r, i) => {
+          const pace = parsePace(r.pace);
+          const color = COLORS[i % COLORS.length];
+          const dist = distAt(pace, slider);
+          const cx = leftPad + (dist / RACE_KM) * usable;
+          const cy = topPad + i * rowH + rowH / 2;
+          const done = pace && slider >= pace * RACE_KM;
+
+          return (
+            <g key={r.id}>
+              {/* Track BG */}
+              <rect x={leftPad} y={cy-8} width={usable} height={16} rx={8} fill="#1e2130"/>
+              {/* Progress */}
+              {pace && (
+                <rect x={leftPad} y={cy-8} width={(dist/RACE_KM)*usable} height={16} rx={8} fill={color} opacity={0.5}/>
+              )}
+              {/* Name */}
+              <text x={leftPad-8} y={cy+5} textAnchor="end" fill={color} fontSize={13} fontWeight={700}>{r.name}</text>
+              {/* Runner dot */}
+              {pace && (
+                <g>
+                  <circle cx={cx} cy={cy} r={11} fill={color} stroke="#0f1117" strokeWidth={2.5}/>
+                  <text x={cx} y={cy+4} textAnchor="middle" fill="#fff" fontSize={9} fontWeight={800}>
+                    {dist.toFixed(1)}
+                  </text>
+                </g>
+              )}
+              {/* Finish flag */}
+              {done && (
+                <text x={leftPad+usable+10} y={cy+5} fontSize={18}>🏁</text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function CheckpointTable({ runners }) {
+  return (
+    <div style={{overflowX:"auto"}}>
+      <table>
+        <thead>
+          <tr>
+            <th>Runner</th>
+            <th>Pace</th>
+            {CHECKPOINTS.map(km => (
+              <th key={km} style={{textAlign:"center"}}>{km === RACE_KM ? "Finish 🏁" : `${km} km`}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {runners.map((r, i) => {
+            const pace = parsePace(r.pace);
+            const color = COLORS[i % COLORS.length];
+            return (
+              <tr key={r.id}>
+                <td style={{fontWeight:600}}>
+                  <span style={{display:"inline-block", width:10, height:10, borderRadius:"50%", background:color, marginRight:8}}/>
+                  {r.name}
+                </td>
+                <td style={{color:"#888"}}>{r.pace} /km</td>
+                {CHECKPOINTS.map(km => {
+                  const mins = pace ? pace * km : null;
+                  return (
+                    <td key={km} style={{textAlign:"center", lineHeight:1.6}}>
+                      {mins ? (
+                        <>
+                          <span style={{color:"#e0e0e0", fontWeight:600}}>{clockTime(mins)}</span><br/>
+                          <span style={{color:"#555", fontSize:11}}>{fmtElapsed(mins)}</span>
+                        </>
+                      ) : "—"}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div style={{background:"#1a1d27", borderRadius:14, padding:"20px 24px", marginBottom:20, border:"1px solid #22253a"}}>
+      <div style={{fontSize:12, fontWeight:700, color:"#666", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:16}}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
