@@ -1,122 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prague Half Marathon – Pace Helper</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
-    body { background: #0f1117; color: #f0f0f0; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; }
-    #sidebar { width: 360px; min-width: 360px; height: 100vh; overflow-y: auto; padding: 20px 16px; background: #0f1117; border-right: 1px solid #1e2130; display: flex; flex-direction: column; gap: 14px; }
-    h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
-    .subtitle { color: #666; font-size: 12px; margin-top: 2px; }
-    #map { flex: 1; height: 100vh; }
-    .card { background: #1a1d27; border-radius: 12px; padding: 14px 16px; border: 1px solid #22253a; }
-    .card-title { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
-    .runner-row { display: flex; align-items: center; gap: 8px; background: #12141f; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; border: 1.5px solid transparent; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .runner-row input[type=text] { background: transparent; border: none; color: #f0f0f0; font-size: 13px; outline: none; min-width: 0; }
-    .runner-row input[type=text]::placeholder { color: #444; }
-    .name-input { flex: 2; font-weight: 600; }
-    .pace-wrap { display: flex; align-items: center; gap: 4px; flex: 1.5; }
-    .pace-input { flex: 1; }
-    .pace-unit { color: #555; font-size: 11px; white-space: nowrap; }
-    .finish-label { color: #888; font-size: 11px; text-align: right; flex: 1.4; white-space: nowrap; }
-    .remove-btn { background: none; border: none; color: #444; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px; }
-    .remove-btn:hover { color: #e63946; }
-    #add-btn { width: 100%; background: none; border: 1px dashed #2a2d3a; border-radius: 8px; color: #555; padding: 7px; cursor: pointer; font-size: 12px; margin-top: 2px; }
-    #add-btn:hover { border-color: #444; color: #888; }
-    #clock-label { font-size: 13px; font-weight: 700; color: #ccc; margin-bottom: 8px; }
-    input[type=range] { width: 100%; accent-color: #e63946; cursor: pointer; height: 4px; }
-    .slider-ends { display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-top: 4px; }
-    #play-btn { width: 100%; background: #e63946; border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; padding: 9px; cursor: pointer; letter-spacing: 0.04em; }
-    #play-btn:hover { background: #c1121f; }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    th { color: #555; padding: 4px 6px; text-align: center; border-bottom: 1px solid #22253a; font-weight: 600; }
-    th:first-child { text-align: left; }
-    td { padding: 5px 6px; border-bottom: 1px solid #1a1d27; text-align: center; color: #aaa; }
-    td:first-child { text-align: left; font-weight: 600; color: #d0d0d0; }
-    .clock-t { color: #e0e0e0; font-weight: 600; display: block; }
-    .elapsed-t { color: #555; font-size: 10px; }
-    .leaflet-container { background: #0f1117; }
-    .runner-label { background: transparent !important; border: none !important; box-shadow: none !important; font-size: 11px; font-weight: 700; text-shadow: 0 1px 3px #000, 0 0 6px #000; white-space: nowrap; }
-    .km-label { background: transparent !important; border: none !important; box-shadow: none !important; color: #777; font-size: 9px; font-weight: 600; text-shadow: 0 1px 2px #000; white-space: nowrap; }
-    .leaflet-tooltip.cp-tip { background: transparent; border: none; box-shadow: none; color: #999; font-size: 10px; font-weight: 700; text-shadow: 0 1px 3px #000; }
-    .leaflet-tooltip-left.cp-tip::before, .leaflet-tooltip-right.cp-tip::before { border: none; }
-    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f1117; } ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 2px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prague Half Marathon – Pace Helper</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f1117; color: #f0f0f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; padding: 24px 20px 40px; max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .subtitle { color: #555; font-size: 13px; margin-top: 3px; }
+  .card { background: #1a1d27; border: 1px solid #22253a; border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
+  .card-title { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; }
+  .runner-row { display: flex; align-items: center; gap: 10px; background: #12141f; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px; border: 1.5px solid transparent; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .runner-row input { background: transparent; border: none; color: #f0f0f0; font-size: 14px; outline: none; min-width: 0; }
+  .runner-row input::placeholder { color: #3a3a4a; }
+  .name-in { flex: 3; font-weight: 600; }
+  .pace-wrap { display: flex; align-items: center; gap: 6px; flex: 2; }
+  .pace-in { flex: 1; }
+  .pace-unit { color: #444; font-size: 11px; white-space: nowrap; }
+  .finish-lbl { color: #666; font-size: 11px; flex: 2; text-align: right; white-space: nowrap; }
+  .rm-btn { background: none; border: none; color: #333; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; }
+  .rm-btn:hover { color: #e63946; }
+  #add-btn { width: 100%; background: none; border: 1px dashed #252837; border-radius: 9px; color: #444; padding: 8px; cursor: pointer; font-size: 12px; margin-top: 2px; }
+  #add-btn:hover { border-color: #3a3a52; color: #777; }
+  #clock-lbl { font-size: 15px; font-weight: 700; color: #ddd; margin-bottom: 10px; }
+  input[type=range] { width: 100%; accent-color: #e63946; cursor: pointer; height: 5px; border-radius: 3px; }
+  .slider-ends { display: flex; justify-content: space-between; font-size: 10px; color: #3a3a52; margin-top: 5px; }
+  #play-btn { width: 100%; background: #e63946; border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 700; padding: 11px; cursor: pointer; letter-spacing: 0.05em; margin-bottom: 16px; }
+  #play-btn:hover { background: #c1121f; }
+  #track-wrap { position: relative; padding: 12px 0 20px; }
+  .track-line { position: absolute; top: 24px; left: 28px; right: 28px; height: 3px; background: #252837; border-radius: 2px; }
+  .km-tick { position: absolute; top: 18px; width: 1px; height: 12px; background: #2a2d3f; transform: translateX(-50%); }
+  .km-lbl { position: absolute; top: 32px; font-size: 8px; color: #333; transform: translateX(-50%); white-space: nowrap; }
+  .km-cp { position: absolute; top: 16px; width: 2px; height: 16px; background: #3a3a52; transform: translateX(-50%); }
+  .km-cp-lbl { position: absolute; top: 34px; font-size: 9px; color: #555; font-weight: 700; transform: translateX(-50%); white-space: nowrap; }
+  .rdot { position: absolute; top: 14px; width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid #0f1117; transform: translateX(-50%); transition: left 0.12s ease-out; display: flex; align-items: center; justify-content: center; }
+  .rdot-lbl { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 4px #0f1117; pointer-events: none; }
+  .finish-flag { position: absolute; top: 8px; right: 14px; font-size: 18px; line-height: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { color: #444; padding: 5px 8px; text-align: center; border-bottom: 1px solid #1e2130; font-weight: 700; font-size: 10px; letter-spacing: 0.05em; }
+  th:first-child { text-align: left; }
+  td { padding: 6px 8px; border-bottom: 1px solid #161820; text-align: center; color: #888; }
+  td:first-child { text-align: left; color: #ccc; font-weight: 600; }
+  .ct { color: #e0e0e0; font-weight: 700; display: block; }
+  .et { color: #444; font-size: 10px; }
+</style>
 </head>
 <body>
-<div id="sidebar">
-  <div>
-    <h1>🏃 Prague Half Marathon</h1>
-    <div class="subtitle">Pace Helper &nbsp;·&nbsp; 28 March 2026 &nbsp;·&nbsp; Start 10:00</div>
-  </div>
-  <div class="card">
-    <div class="card-title">Your Group</div>
-    <div id="runners-list"></div>
-    <button id="add-btn">+ Add runner</button>
-  </div>
-  <div class="card">
-    <div id="clock-label">10:00 · start</div>
-    <input type="range" id="slider" min="0" max="180" step="0.25" value="0" />
-    <div class="slider-ends"><span>10:00 start</span><span>finish →</span></div>
-  </div>
-  <button id="play-btn">▶ Play</button>
-  <div class="card">
-    <div class="card-title">Checkpoint Times</div>
-    <div id="cp-table-wrap" style="overflow-x:auto;"></div>
-  </div>
-</div>
-<div id="map"></div>
+<header><h1>🏃 Prague Half Marathon</h1><div class="subtitle">Pace Helper · 28 March 2026 · Start 10:00</div></header>
+<div class="card"><div class="card-title">Your Group</div><div id="runners-list"></div><button id="add-btn">+ Add runner</button></div>
+<div class="card"><div id="clock-lbl">10:00 · start</div><input type="range" id="slider" min="0" max="180" step="0.25" value="0" /><div class="slider-ends"><span>10:00 start</span><span>finish →</span></div></div>
+<button id="play-btn">▶ Play</button>
+<div class="card" style="padding:18px 20px 28px"><div class="card-title">Race Track</div><div id="track-wrap" style="height:72px"><div class="track-line"></div><span class="finish-flag">🏁</span></div></div>
+<div class="card"><div class="card-title">Checkpoint Times</div><div style="overflow-x:auto"><table id="cp-table"></table></div></div>
 <script>
-const RACE_KM = 21.0975;
-const COLORS = ["#e63946","#2a9d8f","#e9c46a","#f4a261","#a8dadc","#6d6875","#b5838d","#48cae4","#52b788","#ff6b6b"];
-const CHECKPOINTS = [5, 10, 15, RACE_KM];
-const ROUTE_GPS = [
-  [50.1072,14.4447],[50.1072,14.4510],[50.1090,14.4600],[50.1116,14.4670],
-  [50.1185,14.4850],[50.1225,14.5133],[50.1215,14.5150],[50.1138,14.4807],
-  [50.1060,14.4580],[50.0984,14.4292],[50.0884,14.4127],[50.0785,14.4103],
-  [50.0686,14.4086],[50.0576,14.4079],[50.0466,14.4079],[50.0367,14.4076],
-  [50.0267,14.4076],[50.0344,14.4103],[50.0444,14.4138],[50.0532,14.4189],
-  [50.0620,14.4258],[50.0697,14.4326],[50.0774,14.4395],[50.0851,14.4440],
-  [50.0940,14.4457],[50.1006,14.4447],[50.1072,14.4447]
-];
-function hav(a,b){const R=6371,dL=(b[0]-a[0])*Math.PI/180,dN=(b[1]-a[1])*Math.PI/180,s=Math.sin(dL/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dN/2)**2;return R*2*Math.asin(Math.sqrt(s));}
-const cum=[0];for(let i=1;i<ROUTE_GPS.length;i++)cum.push(cum[i-1]+hav(ROUTE_GPS[i-1],ROUTE_GPS[i]));
-const totalD=cum[cum.length-1],sf=RACE_KM/totalD;
-function posAtKm(km){const d=km/sf;if(d<=0)return ROUTE_GPS[0];if(d>=totalD)return ROUTE_GPS[ROUTE_GPS.length-1];for(let i=1;i<ROUTE_GPS.length;i++){if(cum[i]>=d){const t=(d-cum[i-1])/(cum[i]-cum[i-1]);return[ROUTE_GPS[i-1][0]+t*(ROUTE_GPS[i][0]-ROUTE_GPS[i-1][0]),ROUTE_GPS[i-1][1]+t*(ROUTE_GPS[i][1]-ROUTE_GPS[i-1][1])];}}return ROUTE_GPS[ROUTE_GPS.length-1];}
-function parsePace(s){const c=s.trim().replace(",",".");if(c.includes(":")){const[m,sec]=c.split(":").map(Number);if(isNaN(m)||isNaN(sec))return null;return m+sec/60;}const v=parseFloat(c);return isNaN(v)?null:v;}
-function pad(n){return String(n).padStart(2,"0");}
-function fmtE(m){const h=Math.floor(m/60),mm=Math.floor(m%60),s=Math.round((m*60)%60);return h>0?h+":"+pad(mm)+":"+pad(s):mm+":"+pad(s);}
-function clk(m){const a=600+m;return pad(Math.floor(a/60)%24)+":"+pad(Math.floor(a%60));}
-function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+const RACE_KM=21.0975,START_MIN=600,CPS=[5,10,15,21.0975],CPL=["5 km","10 km","15 km","Finish 🏁"];
+const COLORS=["#e63946","#2a9d8f","#e9c46a","#f4a261","#a8dadc","#6d6875","#b5838d","#48cae4","#52b788","#ff7b54"];
 let runners=[{id:1,name:"Anna",pace:"5:00"},{id:2,name:"Ben",pace:"5:30"},{id:3,name:"Clara",pace:"6:15"}];
 let nextId=4,elapsed=0,playing=false,rafId=null,lastTs=null;
 const SPEED=25;
-const map=L.map("map",{center:[50.075,14.440],zoom:13});
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:'© OSM © CARTO',subdomains:"abcd",maxZoom:19}).addTo(map);
-const line=L.polyline(ROUTE_GPS,{color:"#e63946",weight:4,opacity:0.65}).addTo(map);
-L.circleMarker(ROUTE_GPS[0],{radius:9,color:"#fff",fillColor:"#e63946",fillOpacity:1,weight:2.5}).addTo(map).bindTooltip("Start / Finish",{permanent:true,direction:"right",className:"cp-tip",offset:[10,0]});
-for(let km=1;km<=20;km++){const p=posAtKm(km);L.circleMarker(p,{radius:3,color:"#555",fillColor:"#333",fillOpacity:1,weight:1}).addTo(map);L.marker(p,{icon:L.divIcon({className:"km-label",html:String(km),iconAnchor:[-7,6]}),interactive:false}).addTo(map);}
-[[5,"#2a9d8f"],[10,"#e9c46a"],[15,"#f4a261"]].forEach(([km,c])=>{L.circleMarker(posAtKm(km),{radius:7,color:c,fillColor:"#0f1117",fillOpacity:0.95,weight:2.5}).addTo(map).bindTooltip(km+" km",{permanent:true,direction:"right",className:"cp-tip",offset:[10,0]});});
-let rm={};
-function syncMarkers(){Object.keys(rm).forEach(id=>{if(!runners.find(r=>r.id==id)){rm[id].c.remove();rm[id].l.remove();delete rm[id];}});runners.forEach((r,i)=>{if(!rm[r.id]){const col=COLORS[i%10];rm[r.id]={c:L.circleMarker(ROUTE_GPS[0],{radius:11,color:"#0f1117",fillColor:col,fillOpacity:1,weight:2.5}).addTo(map),l:L.marker(ROUTE_GPS[0],{icon:L.divIcon({className:"runner-label",html:'<span style="color:'+col+'">'+esc(r.name)+'</span>',iconAnchor:[-14,8]}),interactive:false}).addTo(map)};});}
-function moveRunners(){runners.forEach((r,i)=>{const m=rm[r.id];if(!m)return;const col=COLORS[i%10],p=parsePace(r.pace),km=p?Math.min(elapsed/p,RACE_KM):0,pos=posAtKm(km);m.c.setStyle({fillColor:col});m.c.setLatLng(pos);m.l.setLatLng(pos);m.l.setIcon(L.divIcon({className:"runner-label",html:'<span style="color:'+col+'">'+esc(r.name)+'</span>',iconAnchor:[-14,8]}));});}
-function maxT(){return Math.max(180,...runners.map(r=>{const p=parsePace(r.pace);return p?Math.ceil(p*RACE_KM)+5:180;}));}
-function renderList(){const el=document.getElementById("runners-list");el.innerHTML="";runners.forEach((r,i)=>{const col=COLORS[i%10],p=parsePace(r.pace),f=p?p*RACE_KM:null,d=document.createElement("div");d.className="runner-row";d.style.borderColor=col+"44";d.innerHTML='<div class="dot" style="background:'+col+'"></div><input class="name-input" type="text" value="'+esc(r.name)+'" placeholder="Name" data-id="'+r.id+'" data-field="name"><div class="pace-wrap"><input class="pace-input" type="text" value="'+esc(r.pace)+'" placeholder="5:30" data-id="'+r.id+'" data-field="pace"><span class="pace-unit">min/km</span></div><div class="finish-label">'+(f?'~'+fmtE(f):'<span style="color:#444">—</span>')+'</div><button class="remove-btn" data-id="'+r.id+'">×</button>';el.appendChild(d);});el.querySelectorAll("input[type=text]").forEach(inp=>inp.addEventListener("input",e=>{const id=+e.target.dataset.id,field=e.target.dataset.field;runners=runners.map(r=>r.id===id?{...r,[field]:e.target.value}:r);render();}));el.querySelectorAll(".remove-btn").forEach(b=>b.addEventListener("click",e=>{runners=runners.filter(r=>r.id!=+e.target.dataset.id);render();}));}
-function renderSlider(){const sl=document.getElementById("slider");sl.max=maxT();sl.value=elapsed;document.getElementById("clock-label").textContent=clk(elapsed)+"  ·  elapsed "+fmtE(elapsed);}
-function renderTable(){const w=document.getElementById("cp-table-wrap");let h='<table><thead><tr><th>Runner</th><th>5 km</th><th>10 km</th><th>15 km</th><th>Finish 🏁</th></tr></thead><tbody>';runners.forEach((r,i)=>{const p=parsePace(r.pace),col=COLORS[i%10];h+='<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+col+';margin-right:6px;vertical-align:middle;"></span>'+esc(r.name)+'</td>'+CHECKPOINTS.map(km=>{const m=p?p*km:null;return'<td>'+(m?'<span class="clock-t">'+clk(m)+'</span><span class="elapsed-t">'+fmtE(m)+'</span>':'—')+'</td>';}).join("")+'</tr>';});h+='</tbody></table>';w.innerHTML=h;}
-function render(){renderList();renderSlider();renderTable();syncMarkers();moveRunners();}
-document.getElementById("add-btn").addEventListener("click",()=>{runners.push({id:nextId,name:"Runner "+nextId,pace:"6:00"});nextId++;render();});
-document.getElementById("slider").addEventListener("input",e=>{elapsed=+e.target.value;render();});
+function parsePace(s){s=s.trim().replace(",",".");if(s.includes(":")){const[m,sec]=s.split(":").map(Number);return(isNaN(m)||isNaN(sec))?null:m+sec/60;}const v=parseFloat(s);return isNaN(v)?null:v;}
+function pad(n){return String(Math.floor(n)).padStart(2,"0");}
+function fmtE(m){const h=Math.floor(m/60),mm=Math.floor(m%60),s=Math.round((m*60)%60);return h>0?h+":"+pad(mm)+":"+pad(s):pad(mm)+":"+pad(s);}
+function clk(m){const t=START_MIN+m;return pad(t/60)+":"+pad(t%60);}
+function maxT(){return Math.max(185,...runners.map(r=>{const p=parsePace(r.pace);return p?Math.ceil(p*RACE_KM)+5:185;}));}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+let dotEls={};
+function buildTrack(){const w=document.getElementById("track-wrap");w.querySelectorAll(".km-tick,.km-lbl,.km-cp,.km-cp-lbl").forEach(e=>e.remove());const tw=w.offsetWidth-56;for(let km=1;km<=20;km++){const x=28+(km/RACE_KM)*tw;const isCp=CPS.includes(km);const t=document.createElement("div");t.className=isCp?"km-cp":"km-tick";t.style.left=x+"px";w.appendChild(t);if(km%5===0||km===1){const l=document.createElement("div");l.className=isCp?"km-cp-lbl":"km-lbl";l.textContent=km;l.style.left=x+"px";w.appendChild(l);}}}
+function syncDots(){const w=document.getElementById("track-wrap");Object.keys(dotEls).forEach(id=>{if(!runners.find(r=>r.id==id)){dotEls[id].remove();delete dotEls[id];}});runners.forEach((r,i)=>{if(!dotEls[r.id]){const d=document.createElement("div");d.className="rdot";const l=document.createElement("span");l.className="rdot-lbl";d.appendChild(l);w.appendChild(d);dotEls[r.id]=d;}});}
+function moveDots(){const w=document.getElementById("track-wrap");const tw=w.offsetWidth-56;runners.forEach((r,i)=>{const el=dotEls[r.id];if(!el)return;const c=COLORS[i%10],p=parsePace(r.pace),km=p?Math.min(elapsed/p,RACE_KM):0,x=28+(km/RACE_KM)*tw;el.style.left=x+"px";el.style.background=c;el.style.boxShadow="0 0 8px "+c+"88";el.querySelector(".rdot-lbl").textContent=r.name||"?";el.querySelector(".rdot-lbl").style.color=c;});}
+function renderList(){const el=document.getElementById("runners-list");el.innerHTML="";runners.forEach((r,i)=>{const c=COLORS[i%10],p=parsePace(r.pace),f=p?p*RACE_KM:null,d=document.createElement("div");d.className="runner-row";d.style.borderColor=c+"55";d.innerHTML='<div class="dot" style="background:'+c+'"></div><input class="name-in" type="text" value="'+esc(r.name)+'" placeholder="Name" data-id="'+r.id+'" data-f="name"><div class="pace-wrap"><input class="pace-in" type="text" value="'+esc(r.pace)+'" placeholder="5:30" data-id="'+r.id+'" data-f="pace"><span class="pace-unit">min/km</span></div><div class="finish-lbl">'+(f?'~'+fmtE(f)+' finish':'<span style="color:#333">invalid</span>')+'</div><button class="rm-btn" data-id="'+r.id+'">×</button>';el.appendChild(d);});el.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",e=>{const id=+e.target.dataset.id,f=e.target.dataset.f;runners=runners.map(r=>r.id===id?{...r,[f]:e.target.value}:r);renderAll();}));el.querySelectorAll(".rm-btn").forEach(b=>b.addEventListener("click",e=>{runners=runners.filter(r=>r.id!==+e.target.dataset.id);renderAll();}));}
+function renderSlider(){const sl=document.getElementById("slider");sl.max=maxT();sl.value=elapsed;document.getElementById("clock-lbl").textContent=clk(elapsed)+"  ·  elapsed "+fmtE(elapsed);}
+function renderTable(){let h='<thead><tr><th>Runner</th>'+CPL.map(l=>'<th>'+l+'</th>').join("")+'</tr></thead><tbody>';runners.forEach((r,i)=>{const p=parsePace(r.pace),c=COLORS[i%10];h+='<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+c+';margin-right:7px;vertical-align:middle"></span>'+esc(r.name)+'</td>'+CPS.map(km=>{const m=p?p*km:null;return'<td>'+(m?'<span class="ct">'+clk(m)+'</span><span class="et">'+fmtE(m)+'</span>':'—')+'</td>';}).join("")+'</tr>';});h+='</tbody>';document.getElementById("cp-table").innerHTML=h;}
+function renderAll(){renderList();renderSlider();syncDots();moveDots();renderTable();}
+document.getElementById("add-btn").addEventListener("click",()=>{runners.push({id:nextId,name:"Runner "+nextId,pace:"6:00"});nextId++;renderAll();});
+document.getElementById("slider").addEventListener("input",e=>{elapsed=+e.target.value;renderAll();});
 document.getElementById("play-btn").addEventListener("click",()=>{playing=!playing;document.getElementById("play-btn").textContent=playing?"⏸ Pause":"▶ Play";if(playing){lastTs=null;rafId=requestAnimationFrame(anim);}else if(rafId)cancelAnimationFrame(rafId);});
-function anim(ts){if(!playing)return;if(lastTs!==null){elapsed+=((ts-lastTs)/1000)*SPEED;if(elapsed>=maxT()){elapsed=maxT();playing=false;document.getElementById("play-btn").textContent="▶ Play";render();return;}render();}lastTs=ts;rafId=requestAnimationFrame(anim);}
-render();
-map.fitBounds(line.getBounds(),{padding:[40,40]});
+function anim(ts){if(!playing)return;if(lastTs!==null){elapsed+=((ts-lastTs)/1000)*SPEED;const mx=maxT();if(elapsed>=mx){elapsed=mx;playing=false;document.getElementById("play-btn").textContent="▶ Play";renderAll();return;}renderAll();}lastTs=ts;rafId=requestAnimationFrame(anim);}
+window.addEventListener("resize",()=>{buildTrack();moveDots();});
+buildTrack();renderAll();
 </script>
 </body>
 </html>
